@@ -15,6 +15,7 @@ import java.util.Calendar;
 import com.bb.patch.file.data.UniqueStringList;
 import com.bb.patch.form.PatchForm;
 import com.bb.patch.main.MainController;
+import com.bb.patch.string.PathUtil;
 import com.bb.patch.string.StringUtil;
 
 public class FileController {
@@ -26,7 +27,7 @@ public class FileController {
 	}
 	
 
-	public boolean copyAndPasteFile(String realClassFolderPath, boolean bDirCopyMode, String path, UniqueStringList resultFilePathListToPrint, UniqueStringList resultCorePathListToPrint) throws Exception {
+	public boolean copyAndPasteFile(String realClassFolderPath, boolean bDirCopyMode, String path, UniqueStringList destDirPathList, UniqueStringList resultFilePathListToPrint, UniqueStringList resultCorePathListToPrint) throws Exception {
 		if (path == null || path.trim().length() == 0) {
 			printErrLog("파일 경로가 없습니다.");
 			return false;
@@ -67,32 +68,32 @@ public class FileController {
 			String endPath = path;
 			endPath = StringUtil.makeEndPath(endPath);
 			
-			String destDirPath = PatchForm.destDirText.getText();
-			if (destDirPath == null || destDirPath.length() == 0) {
-				// destDirPath = "C:\\patch_result";
-				printErrLog("결과 폴더를 알 수 없습니다.");
-				return false;
-			}
+//			String destDirPath = PatchForm.destDirText.getText();
+//			if (destDirPath == null || destDirPath.length() == 0) {
+//				// destDirPath = "C:\\patch_result";
+//				printErrLog("결과 폴더를 알 수 없습니다.");
+//				return false;
+//			}
+//			
+//			if (!destDirPath.matches("[a-zA-Z]:.*")) {
+//				printErrLog("결과 폴더는 드라이브명으로 시작해야 합니다. (ex : C:, D:, E:)");
+//				return false;
+//			}
+//			
+//			File currentDir = new File(destDirPath);
+//			if (!currentDir.exists()) {
+//				printLog("존재하지 않는 폴더생성 : " + destDirPath);
+//				currentDir.mkdirs();
+//			}
 			
-			if (!destDirPath.matches("[a-zA-Z]:.*")) {
-				printErrLog("결과 폴더는 드라이브명으로 시작해야 합니다. (ex : C:, D:, E:)");
-				return false;
-			}
-			
-			File currentDir = new File(destDirPath);
-			if (!currentDir.exists()) {
-				printLog("존재하지 않는 폴더생성 : " + destDirPath);
-				currentDir.mkdirs();
-			}
-			String currentDirPath = currentDir.getAbsolutePath().replace("\\", "/");
-			String resultPath = currentDirPath + "/" + endPath;
-			resultPath = StringUtil.makeToSlashPath(resultPath);
-
+//			String currentDirPath = currentDir.getAbsolutePath().replace("\\", "/");
+//			String resultPath = currentDirPath + "/" + endPath;
+//			resultPath = StringUtil.makeToSlashPath(resultPath);
+//
 			String corePath1 = "/" + endPath;
 			corePath1 = StringUtil.makeToSlashPath(corePath1);
 			
 			printLog("수정시간 : " + getFileModifyDateTime(originFile));
-			printLog("파일 복제 결과경로 : " + resultPath);
 			
 			if (originFile.exists()) {
 				boolean copySuccess = true;
@@ -110,70 +111,43 @@ public class FileController {
 				
 				// 실제 카피한다.
 				if (copySuccess) {
-					copySuccess = copyFile(path, resultPath);
-					// 여기부터어
-					{
-						String path1 = "C:/NANUM/workspaces/SmartFlowOSE3.8/SmartFlowOSE3.8/" + endPath;
-						path = StringUtil.revisePath(path);
-						path1 = StringUtil.revisePath(path1);
-						if (!path.equals(path1)) {
-							copySuccess = copyFile(path, path1);
-							System.out.println("copySuccess : " + copySuccess);
+					if (destDirPathList != null && destDirPathList.size() > 0) {
+						int destDirPathCount = destDirPathList.size();
+						String oneDirPath = "";
+						for (int k=0; k<destDirPathCount; k++) {
+							oneDirPath = destDirPathList.get(k);
+							if (oneDirPath == null || oneDirPath.length() == 0) {
+								continue;
+							}
+							
+							oneDirPath = PathUtil.revisePath(oneDirPath);
+							if (oneDirPath.endsWith("/")) {
+								oneDirPath = oneDirPath.substring(0, oneDirPath.length() - 1);
+							}
+							
+							// String path1 = "C:/NANUM/workspaces/SmartFlowOSE3.8/SmartFlowOSE3.8/" + endPath;
+							String resultPath = oneDirPath + "/" + endPath;
+							printLog("파일 복제 결과경로 : " + resultPath);
+							
+							path = StringUtil.revisePath(path);
+							resultPath = StringUtil.revisePath(resultPath);
+							if (!path.equals(resultPath)) {
+								copySuccess = copyFile(path, resultPath);
+								// System.out.println("copySuccess : " + copySuccess);
+							}
+							
+							// 유효한 파일패스만 넣는다. 나중에 출력해주기 위함.
+							if (copySuccess) {
+								resultFilePathListToPrint.add(resultPath);
+								resultCorePathListToPrint.add(corePath1);
+							} else {
+								printErrLog("복사 실패 : " + resultPath.trim());
+							}
 						}
 					}
-					
-					{
-						String path1 = "C:/NANUM/workspaces/SSIF38/SmartFlowOSE3.8/" + endPath;
-						path = StringUtil.revisePath(path);
-						path1 = StringUtil.revisePath(path1);
-						if (!path.equals(path1)) {
-							copySuccess = copyFile(path, path1);
-							System.out.println("copySuccess : " + copySuccess);
-						}
-					}
-					
-					{
-						String path1 = "C:/NANUM/workspaces/KIHASA38/SmartFlowOSE3.8/" + endPath;
-						path = StringUtil.revisePath(path);
-						path1 = StringUtil.revisePath(path1);
-						if (!path.equals(path1)) {
-							copySuccess = copyFile(path, path1);
-							System.out.println("copySuccess : " + copySuccess);
-						}
-					}
-					
-					{
-						String path1 = "C:/NANUM/workspaces/ITKC38/SmartFlowOSE3.8/" + endPath;
-						path = StringUtil.revisePath(path);
-						path1 = StringUtil.revisePath(path1);
-						if (!path.equals(path1)) {
-							copySuccess = copyFile(path, path1);
-							System.out.println("copySuccess : " + copySuccess);
-						}
-					}
-					
-					{
-						String path1 = "C:/NANUM/workspaces/EXSERVICE/SmartFlowOSE3.7.1/" + endPath;
-						path = StringUtil.revisePath(path);
-						path1 = StringUtil.revisePath(path1);
-						if (!path.equals(path1)) {
-							copySuccess = copyFile(path, path1);
-							System.out.println("copySuccess : " + copySuccess);
-						}
-					}
-					
-					{
-						String path1 = "C:/NANUM/workspaces/KHEALTH/SmartFlowOSE3.7.1/" + endPath;
-						path = StringUtil.revisePath(path);
-						path1 = StringUtil.revisePath(path1);
-						if (!path.equals(path1)) {
-							copySuccess = copyFile(path, path1);
-							System.out.println("copySuccess : " + copySuccess);
-						}
-					}
-					//여기까지.
 				}
 				
+				/*
 				// 폴더 경로 얻기
 				{
 					// 이너클래스 얻기
@@ -247,16 +221,16 @@ public class FileController {
 							// MMapFile$MMapIterator
 						}
 					}
-					
 				}
+				*/
 				
 				// 유효한 파일패스만 넣는다. 나중에 출력해주기 위함.
-				if (copySuccess) {
-					resultFilePathListToPrint.add(resultPath);
-					resultCorePathListToPrint.add(corePath1);
-				} else {
-					printErrLog("복사 실패 : " + resultPath.trim());
-				}
+//				if (copySuccess) {
+//					resultFilePathListToPrint.add(resultPath);
+//					resultCorePathListToPrint.add(corePath1);
+//				} else {
+//					printErrLog("복사 실패 : " + resultPath.trim());
+//				}
 				
 			} else {
 				printErrLog("파일이 존재하지 않습니다! " + path);
@@ -284,6 +258,7 @@ public class FileController {
 			resultPath = originPath;
 			
 			boolean replaceJavaToCls = false;
+			/*
 			replaceJavaToCls = PatchForm.javaToClassCheckBox.isSelected();
 			
 			if (replaceJavaToCls) {
@@ -315,6 +290,7 @@ public class FileController {
 					}
 				}
 			}
+			*/
 			
 		} catch (Exception e) {
 			printErrLog("replacePathFindToReplace : " + e.getMessage());

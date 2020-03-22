@@ -5,7 +5,7 @@ import com.bb.patch.file.data.StringMap;
 
 public class PropFileController {
 	
-	public StringMap readPropFile(String propFilePath) {
+	public StringMap readPropFile(String propFilePath, boolean getDuplWithSemicolon) {
 		
 		StringMap resultMap = new StringMap();
 		TextFileController textFileCtrl = null;
@@ -51,7 +51,17 @@ public class PropFileController {
 				String valueText = lineText.substring(equalMarkIdx + 1);
 				valueText = valueText.trim();
 				
-				resultMap.put(keyText, valueText);
+				if (getDuplWithSemicolon) {
+					String oldOne = resultMap.get(keyText);
+					if (oldOne != null && oldOne.length() > 0) {
+						valueText = oldOne + ";" + valueText;
+						resultMap.put(keyText, valueText);
+					} else {
+						resultMap.put(keyText, valueText);
+					}
+				} else {
+					resultMap.put(keyText, valueText);
+				}
 			}
 			
 		} catch (Exception e) {

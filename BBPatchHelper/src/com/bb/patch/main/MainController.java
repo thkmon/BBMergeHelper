@@ -438,6 +438,11 @@ public class MainController {
 					}
 				}
 			}
+			
+			if (targetFolderText == null || targetFolderText.trim().length() == 0) {
+				AlterForm.open("대상 폴더를 입력해주세요.");
+				return;
+			}
 
 			String inputText = PatchForm.targetPathList.getText();
 
@@ -455,11 +460,19 @@ public class MainController {
 					}
 
 				} else {
-					AlterForm.open("입력값이 없습니다.");
+					// AlterForm.open("입력값이 없습니다.");
+					AlterForm.open("대상 파일을 입력해주세요.");
 					return;
 				}
 			}
-
+			
+			
+			String destDirPathText = PatchForm.destDirPathList.getText();
+			StringList destDirPathTextList = StringUtil.splitMulti(destDirPathText, "\r\n", "\r", "\n", ";");
+			UniqueStringList uniqueDestDirPathTextList = new UniqueStringList();
+			uniqueDestDirPathTextList.add(destDirPathTextList);
+			
+			
 			FileController fileCtrl = new FileController(this);
 
 			ArrayList<String> inputList = null;
@@ -518,7 +531,7 @@ public class MainController {
 					continue;
 				}
 
-				if (!fileCtrl.copyAndPasteFile(realClassFolderPath, bDirCopyMode, oneInputPath, resultFilePathListToPrint, resultCorePathListToPrint)) {
+				if (!fileCtrl.copyAndPasteFile(realClassFolderPath, bDirCopyMode, oneInputPath, uniqueDestDirPathTextList, resultFilePathListToPrint, resultCorePathListToPrint)) {
 					printErrLog("실패! " + oneInputPath);
 				}
 			}
@@ -547,21 +560,6 @@ public class MainController {
 	public void printResultPaths(UniqueStringList resultFilePathListToPrint, UniqueStringList resultCorePathListToPrint) {
 		int pathCount = 0;
 		
-		// 절대경로 출력
-		if (resultFilePathListToPrint != null && resultFilePathListToPrint.size() > 0) {
-			printLog("==================================================");
-			pathCount = resultFilePathListToPrint.size();
-			printLog("총 파일 개수 : " + pathCount + "개");
-
-			// 스트링 정렬
-			Collections.sort(resultFilePathListToPrint);
-
-			for (int i = 0; i < pathCount; i++) {
-				printLog(resultFilePathListToPrint.get(i));
-			}
-			printLog("==================================================");
-		}
-		
 		// 상대경로 출력
 		if (resultCorePathListToPrint != null && resultCorePathListToPrint.size() > 0) {
 			printLog("==================================================");
@@ -569,7 +567,7 @@ public class MainController {
 			
 			// 둘의 카운트가 같은게 정상이다. 혹시 모르니 다를 경우 개수를 출력한다.
 			if (pathCount != coreCount) {
-				printLog("총 파일 개수 : " + coreCount + "개");
+				printLog("입력 파일 개수 : " + coreCount + "개");
 			}
 
 			// 스트링 정렬
@@ -577,6 +575,21 @@ public class MainController {
 
 			for (int i = 0; i < coreCount; i++) {
 				printLog(resultCorePathListToPrint.get(i));
+			}
+			printLog("==================================================");
+		}
+		
+		// 절대경로 출력
+		if (resultFilePathListToPrint != null && resultFilePathListToPrint.size() > 0) {
+			printLog("==================================================");
+			pathCount = resultFilePathListToPrint.size();
+			printLog("목적 파일 개수 : " + pathCount + "개");
+
+			// 스트링 정렬
+			Collections.sort(resultFilePathListToPrint);
+
+			for (int i = 0; i < pathCount; i++) {
+				printLog(resultFilePathListToPrint.get(i));
 			}
 			printLog("==================================================");
 		}
@@ -794,6 +807,10 @@ public class MainController {
 	 * @throws Exception
 	 */
 	public String getRealClassFolderPath() throws Exception {
+		// java 대신 class 가져오기 체크한 경우만 클래스 패스 필요하다.
+		return "";
+		
+		/*
 		boolean replaceJavaToCls = PatchForm.javaToClassCheckBox.isSelected();
 		
 		// java 대신 class 가져오기 체크한 경우만 클래스 패스 필요하다.
@@ -831,6 +848,7 @@ public class MainController {
 		}
 		
 		return getRealClassFolderPathByDotClasspathFile(targetFolderText);
+		*/
 	}
 	
 	

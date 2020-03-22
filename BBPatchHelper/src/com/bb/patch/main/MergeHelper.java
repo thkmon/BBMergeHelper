@@ -3,7 +3,7 @@ package com.bb.patch.main;
 import com.bb.patch.form.PatchForm;
 
 
-public class PatchHelper {
+public class MergeHelper {
 
 	public static void main(String[] args) {
 
