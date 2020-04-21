@@ -24,9 +24,9 @@ public class CConst {
 	// targetDir == "C:\\NANUM\\workspaces\\프로젝트명\\폴더명\\";
 	public static String targetDir = getOption("TARGET_DIR", "");
 	
-	public static String classDir = getOption("CLASS_DIR", "");
+	// public static String classDir = getOption("CLASS_DIR", "");
 	
-	public static boolean bJavaToClass = getOption("JAVA_TO_CLASS", "1").equals("1");
+	// public static boolean bJavaToClass = getOption("JAVA_TO_CLASS", "1").equals("1");
 	
 	public static String forbiddenFile = getOption("FORBIDDEN_FILE", "*.xml, *.conf, *.config, *.properties");
 	
