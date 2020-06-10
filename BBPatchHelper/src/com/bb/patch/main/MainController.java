@@ -533,72 +533,101 @@ public class MainController {
 			uniqueDestDirPathTextList.add(destDirPathTextList);
 			
 			
-			FileController fileCtrl = new FileController(this);
-
-			ArrayList<String> inputList = null;
-			if (bDirCopyMode) {
-				// 폴더 복사 모드
-				inputList = FileCollector.getFileList(targetFolderText);
-				if (inputList == null || inputList.size() == 0) {
-					printErrLog("폴더 내의 파일이 존재하지 않습니다. [" + targetFolderText + "]");
-				}
-
-			} else {
-				// 일반 복사 모드
-				inputText = inputText.trim();
-
-				// 엔터값으로 split
-				ArrayList<String> oldInputList = StringUtil.splitMulti(inputText, "\r\n", "\r", "\n", ";");
-
-				// 의미있는 파일 패스만 얻기
-				inputList = getListMeaningfulFilePathOnly(oldInputList, targetFolderText);
-				if (inputList == null || inputList.size() == 0) {
-					printErrLog("패치 대상이 존재하지 않습니다.");
+			// 유효하지 않은 목적 폴더 제외하고 진행
+			if (uniqueDestDirPathTextList != null && uniqueDestDirPathTextList.size() > 0) {
+				String oneDirPath = "";
+				for (int i=0;i<uniqueDestDirPathTextList.size();i++) {
+					oneDirPath = uniqueDestDirPathTextList.get(i);
+					if (oneDirPath != null && oneDirPath.length() > 0) {
+						if (oneDirPath.startsWith("#")) {
+							printLog("#으로 시작하는 목적 폴더 skip : " + oneDirPath);
+							uniqueDestDirPathTextList.remove(i);
+							i--;
+							continue;
+						}
+						
+						File oneDirObj = new File(oneDirPath);
+						if (!oneDirObj.exists() || !oneDirObj.isDirectory()) {
+							printLog("유효하지 않은 목적 폴더 skip : " + oneDirObj.getAbsolutePath());
+							uniqueDestDirPathTextList.remove(i);
+							i--;
+							continue;
+						}
+					}
 				}
 			}
-
-			// 진짜 클래스 폴더패스를 찾는다. 인풋박스에 입력한 값으로 폴더 존재하는지 검사해보고, 없으면 .classpath 파일을 읽어내서 찾아낸다.
-			String realClassFolderPath = getRealClassFolderPath();
 			
-			int count = inputList.size();
-			printLog("패치 대상 개수 : " + count);
+			
+			// 목적 폴더 존재하는 경우에만 복사 진행
+			if (uniqueDestDirPathTextList != null && uniqueDestDirPathTextList.size() > 0) {
+				FileController fileCtrl = new FileController(this);
 
-			// 파일 복사에 성공하면 결과경로를 출력한다.
-			UniqueStringList resultFilePathListToPrint = new UniqueStringList();
-			UniqueStringList resultCorePathListToPrint = new UniqueStringList();
-
-			String oneInputPath = "";
-
-			for (int i = 0; i < count; i++) {
-				printLog((i + 1) + "/" + count);
-				// oneInputPath = inputList[i];
-				oneInputPath = inputList.get(i);
-
-				if (oneInputPath == null || oneInputPath.trim().length() == 0) {
-					continue;
+				ArrayList<String> inputList = null;
+				if (bDirCopyMode) {
+					// 폴더 복사 모드
+					inputList = FileCollector.getFileList(targetFolderText);
+					if (inputList == null || inputList.size() == 0) {
+						printErrLog("폴더 내의 파일이 존재하지 않습니다. [" + targetFolderText + "]");
+					}
 
 				} else {
-					oneInputPath = oneInputPath.trim();
+					// 일반 복사 모드
+					inputText = inputText.trim();
+
+					// 엔터값으로 split
+					ArrayList<String> oldInputList = StringUtil.splitMulti(inputText, "\r\n", "\r", "\n", ";");
+
+					// 의미있는 파일 패스만 얻기
+					inputList = getListMeaningfulFilePathOnly(oldInputList, targetFolderText);
+					if (inputList == null || inputList.size() == 0) {
+						printErrLog("패치 대상이 존재하지 않습니다.");
+					}
 				}
 
-				if (oneInputPath.startsWith("#")) {
-					// 첫 글자 샵은 주석으로 인식
-					continue;
+				// 진짜 클래스 폴더패스를 찾는다. 인풋박스에 입력한 값으로 폴더 존재하는지 검사해보고, 없으면 .classpath 파일을 읽어내서 찾아낸다.
+				String realClassFolderPath = getRealClassFolderPath();
+				
+				int count = inputList.size();
+				printLog("패치 대상 개수 : " + count);
+
+				// 파일 복사에 성공하면 결과경로를 출력한다.
+				UniqueStringList resultFilePathListToPrint = new UniqueStringList();
+				UniqueStringList resultCorePathListToPrint = new UniqueStringList();
+
+				String oneInputPath = "";
+
+				for (int i = 0; i < count; i++) {
+					printLog((i + 1) + "/" + count);
+					// oneInputPath = inputList[i];
+					oneInputPath = inputList.get(i);
+
+					if (oneInputPath == null || oneInputPath.trim().length() == 0) {
+						continue;
+
+					} else {
+						oneInputPath = oneInputPath.trim();
+					}
+
+					if (oneInputPath.startsWith("#")) {
+						// 첫 글자 샵은 주석으로 인식
+						continue;
+					}
+
+					if (matchPatternList(oneInputPath, forbiddenFilePatternList)) {
+						printLog("복사 금지 패턴 : " + oneInputPath);
+						continue;
+					}
+
+					if (!fileCtrl.copyAndPasteFile(realClassFolderPath, bDirCopyMode, oneInputPath, uniqueDestDirPathTextList, resultFilePathListToPrint, resultCorePathListToPrint)) {
+						printErrLog("실패! " + oneInputPath);
+					}
 				}
 
-				if (matchPatternList(oneInputPath, forbiddenFilePatternList)) {
-					printLog("복사 금지 패턴 : " + oneInputPath);
-					continue;
-				}
-
-				if (!fileCtrl.copyAndPasteFile(realClassFolderPath, bDirCopyMode, oneInputPath, uniqueDestDirPathTextList, resultFilePathListToPrint, resultCorePathListToPrint)) {
-					printErrLog("실패! " + oneInputPath);
-				}
+				// 파일 복사에 성공하면 결과경로를 출력한다.
+				printResultPaths(resultFilePathListToPrint, resultCorePathListToPrint);
 			}
-
-			// 파일 복사에 성공하면 결과경로를 출력한다.
-			printResultPaths(resultFilePathListToPrint, resultCorePathListToPrint);
-
+			
+			
 			if (logBuffer != null && logBuffer.length() > 0) {
 				AlterForm.open("결과." + "\r\n" + logBuffer.toString(), CConst.errLogWidth, CConst.errLogHeight);
 
