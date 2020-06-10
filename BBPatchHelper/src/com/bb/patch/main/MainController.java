@@ -149,7 +149,7 @@ public class MainController {
 	// REVISE 버튼 클릭시 수행
 	public void reviseButtonClicked() {
 
-		// 대상파일 인풋박스 보정
+		// 대상폴더 인풋박스 보정
 		String targetFolderText = PatchForm.targetFolderText.getText();
 		if (targetFolderText != null && targetFolderText.length() > 0) {
 			targetFolderText = revisePath(targetFolderText);
@@ -161,7 +161,50 @@ public class MainController {
 
 			PatchForm.targetFolderText.setText(targetFolderText);
 		}
-
+		
+		// 목적폴더 인풋박스 보정
+		String destFolderText = PatchForm.destDirPathList.getText();
+		if (destFolderText != null && destFolderText.length() > 0) {
+			// 엔터값으로 split
+			ArrayList<String> destFolderList = StringUtil.splitMulti(destFolderText, "\n");
+			if (destFolderList != null && destFolderList.size() > 0) {
+				
+				StringBuffer newDestFolderText = new StringBuffer();
+				
+				int destFolderCount = destFolderList.size();
+				for (int i=0; i<destFolderCount; i++) {
+					String onePath = destFolderList.get(i);
+					if (onePath != null && onePath.trim().length() > 0) {
+						onePath = onePath.trim();
+						
+						if (onePath.startsWith("#")) {
+							if (newDestFolderText.length() > 0) {
+								newDestFolderText.append("\n");
+							}
+							newDestFolderText.append(onePath);
+							
+						} else {
+							onePath = revisePath(onePath);
+							int slashIdx = StringUtil.getIndexOfWorkspaceFolderSlash(onePath);
+							if (slashIdx > -1) {
+								onePath = onePath.substring(0, slashIdx);
+							}
+							
+							if (newDestFolderText.length() > 0) {
+								newDestFolderText.append("\n");
+							}
+							newDestFolderText.append(onePath);
+							
+						}
+					}
+				}
+				
+				PatchForm.destDirPathList.setText(newDestFolderText.toString());
+			}
+		}
+		
+		
+		// 대상파일 인풋박스 보정
 		String inputText = PatchForm.targetPathList.getText();
 
 		if (inputText == null || inputText.trim().length() == 0) {
