@@ -10,7 +10,7 @@ import com.bb.patch.string.StringUtil;
 public class CConst {
 	
 	// 프로그램 버전
-	public static String version = "200323";
+	public static String version = "200611";
 	
 	private static final StringMap optionPropFile = new PropFileController().readPropFile("option.properties", true);
 	public static String getOption(String keyText, String defaultStr) {
